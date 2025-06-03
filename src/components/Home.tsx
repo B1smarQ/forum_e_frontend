@@ -1,5 +1,7 @@
+import Header from "./Header/Header.tsx";
+
 export default function Home(){
   return(
-    <p className="">Hello world</p>
+    <Header/>
   )
 }
