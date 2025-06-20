@@ -21,6 +21,14 @@ interface IUserInfo {
     creationTime: string;
 }
 
+interface IUserComment {
+    id: number;
+    body: string;
+    creationTime: string;
+    postId: number;
+    postTitle?: string;
+}
+
 export default function UserProfilePage() {
     const { userId } = useParams();
     const navigate = useNavigate();
@@ -32,6 +40,7 @@ export default function UserProfilePage() {
     const isOwnProfile = currentUserId === parseInt(userId || "0");
     const profileUsername = isOwnProfile ? currentUsername : posts[0]?.authorUsername || "";
     const [userInfo, setUserInfo] = useState<IUserInfo | null>(null);
+    const [userComments, setUserComments] = useState<IUserComment[]>([]);
 
     useEffect(() => {
         const fetchUserPosts = async () => {
@@ -55,8 +64,17 @@ export default function UserProfilePage() {
                 console.error("Failed to fetch user info:", error);
             }
         };
+        const fetchUserComments = async () => {
+            try {
+                const commentsResponse = await axios.get(`http://localhost:8080/comments/user/${userId}`);
+                setUserComments(commentsResponse.data);
+            } catch (error) {
+                console.error("Failed to fetch user comments:", error);
+            }
+        };
         fetchUserPosts();
         fetchUserInfo();
+        fetchUserComments();
     }, [userId]);
 
     const formatDate = (dateString: string) => {
@@ -206,6 +224,30 @@ export default function UserProfilePage() {
                             )}
                         </div>
                     )}
+                </div>
+
+                {/* User Comments Section */}
+                <div className="mt-12">
+                  <h2 className="text-2xl font-extrabold text-white mb-6 tracking-tight">Comments</h2>
+                  {userComments.length > 0 ? (
+                    <div className="space-y-4">
+                      {userComments.map((comment) => (
+                        <div key={comment.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
+                          <div className="flex items-center mb-2">
+                            <span className="text-xs text-gray-500 mr-2">{formatDate(comment.creationTime)}</span>
+                            <Link to={`/post/${comment.postId}`} className="text-xs text-blue-600 hover:underline ml-2">
+                              {comment.postTitle ? `on: ${comment.postTitle}` : `View Post`}
+                            </Link>
+                          </div>
+                          <p className="text-gray-800 text-sm">{comment.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+                      No comments yet.
+                    </div>
+                  )}
                 </div>
             </div>
         </div>
