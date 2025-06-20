@@ -15,6 +15,12 @@ interface IPost {
     communityName: string;
 }
 
+interface IUserInfo {
+    username: string;
+    role: string;
+    creationTime: string;
+}
+
 export default function UserProfilePage() {
     const { userId } = useParams();
     const navigate = useNavigate();
@@ -25,11 +31,14 @@ export default function UserProfilePage() {
     const currentUsername = localStorage.getItem("username") || "";
     const isOwnProfile = currentUserId === parseInt(userId || "0");
     const profileUsername = isOwnProfile ? currentUsername : posts[0]?.authorUsername || "";
+    const [userInfo, setUserInfo] = useState<IUserInfo | null>(null);
 
     useEffect(() => {
         const fetchUserPosts = async () => {
             try {
-                const postsResponse = await axios.get(`http://localhost:8080/api/user/${userId}`);
+                const postsResponse = await axios.get(`http://localhost:8080/posts/user/${userId}`);
+                console.log(postsResponse.data);
+                
                 setPosts(postsResponse.data);
             } catch (error) {
                 console.error("Failed to fetch user posts:", error);
@@ -38,8 +47,16 @@ export default function UserProfilePage() {
                 setLoading(false);
             }
         };
-
+        const fetchUserInfo = async () => {
+            try {
+                const infoResponse = await axios.get(`http://localhost:8080/users/${userId}/info`);
+                setUserInfo(infoResponse.data);
+            } catch (error) {
+                console.error("Failed to fetch user info:", error);
+            }
+        };
         fetchUserPosts();
+        fetchUserInfo();
     }, [userId]);
 
     const formatDate = (dateString: string) => {
@@ -95,14 +112,17 @@ export default function UserProfilePage() {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-4">
                                 <img 
-                                    src="lorem_pfp.jpg" 
+                                    src="../lorem_pfp.jpg" 
                                     alt={profileUsername} 
                                     className="w-20 h-20 rounded-full ring-4 ring-blue-500"
                                 />
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">{profileUsername}</h1>
-                                    {isOwnProfile && (
-                                        <p className="text-gray-600">{localStorage.getItem("email") || ""}</p>
+                                    <h1 className="text-3xl font-bold text-gray-900">{userInfo?.username || profileUsername}</h1>
+                                    {userInfo && (
+                                        <>
+                                            <p className="text-gray-600">Role: {userInfo.role}</p>
+                                            <p className="text-gray-600">Joined: {formatDate(userInfo.creationTime)}</p>
+                                        </>
                                     )}
                                 </div>
                             </div>

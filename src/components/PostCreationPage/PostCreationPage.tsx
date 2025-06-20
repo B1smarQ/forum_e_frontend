@@ -23,7 +23,7 @@ export default function PostCreationPage() {
     useEffect(() => {
         const fetchCommunities = async () => {
             try {
-                const response = await axios.get("http://localhost:8080/api/communities");
+                const response = await axios.get("http://localhost:8080/communities");
                 setCommunities(response.data);
                 if (response.data.length > 0) {
                     setSelectedCommunityId(response.data[0].id);
@@ -65,8 +65,13 @@ export default function PostCreationPage() {
                 communityId: parseInt(selectedCommunityId),
                 creationTime: new Date().toISOString()
             };
+            const token = localStorage.getItem("token");
 
-            const response = await axios.post("http://localhost:8080/api/posts", postData);
+            const response = await axios.post(`http://localhost:8080/posts`, postData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             console.log("Post created:", response.data);
             navigate(`/community/${selectedCommunityId}`); // Redirect to community page after successful creation
         } catch (error) {
